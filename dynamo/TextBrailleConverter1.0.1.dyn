@@ -1,0 +1,393 @@
+{
+  "Uuid": "f77fd1ee-8649-4d7d-9cd5-1f9f1e649f90",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "TextBrailleConverter1.0.1",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [
+    {
+      "Id": "808a7af8e3ac4464ab0f7158082a1a76",
+      "Name": "Family Directory Path",
+      "Type": "string",
+      "Type2": "string",
+      "Value": "C:\\Users\\Computer User\\OneDrive\\Desktop\\New folder",
+      "Description": "Allows you to select a directory on the system and returns its path",
+      "SelectedIndex": 0
+    },
+    {
+      "Id": "7dfb303c8f6d45a180d1360356689591",
+      "Name": "Text to Convert",
+      "Type": "string",
+      "Type2": "string",
+      "Value": "Christopher Riddell",
+      "Description": "Creates a string",
+      "SelectedIndex": 0
+    },
+    {
+      "Id": "ef5afb7b2af2425eb8d2e211b6e27fc0",
+      "Name": "Level",
+      "Type": "selection",
+      "Type2": "dropdownSelection",
+      "Value": "L3",
+      "Description": "Select a level in the active document",
+      "SelectedIndex": 2
+    }
+  ],
+  "Outputs": [
+    {
+      "Id": "ddeea021c47a4cbf9d6a0c03351d7fab",
+      "Name": "Watch",
+      "Type": "unknown",
+      "InitialValue": "",
+      "Description": "Visualizes a node's output"
+    }
+  ],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Input.Directory, CoreNodeModels",
+      "Id": "808a7af8e3ac4464ab0f7158082a1a76",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "9bea6e14b02c40cb85d8db9cf5ccd90b",
+          "Name": "",
+          "Description": "Directory path",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows you to select a directory on the system and returns its path",
+      "HintPath": "C:\\Users\\Computer User\\OneDrive\\Desktop\\New folder",
+      "InputValue": "C:\\Users\\Computer User\\OneDrive\\Desktop\\New folder"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 200.0,
+      "WatchHeight": 200.0,
+      "Id": "ddeea021c47a4cbf9d6a0c03351d7fab",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "be3d237eaf6444ba8363c09bd9146c9e",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "6426bd637e2f4cf89ee162d5e60ed92c",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "import clr\r\nimport os\r\n\r\nclr.AddReference('RevitAPI')\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB.Structure import *\r\n\r\nclr.AddReference('RevitNodes')\r\nimport Revit\r\nclr.ImportExtensions(Revit.GeometryConversion)\r\nclr.ImportExtensions(Revit.Elements)\r\n\r\nclr.AddReference('RevitServices')\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n\r\n############  BRAILLE DICTIONARIES  ############  \r\n# Braille Unicode dictionary\r\nbraille_unicode = {\r\n    'a': '⠁', 'b': '⠃', 'c': '⠉', 'd': '⠙', 'e': '⠑', 'f': '⠋', 'g': '⠛',\r\n    'h': '⠓', 'i': '⠊', 'j': '⠚', 'k': '⠅', 'l': '⠇', 'm': '⠍', 'n': '⠝',\r\n    'o': '⠕', 'p': '⠏', 'q': '⠟', 'r': '⠗', 's': '⠎', 't': '⠞', 'u': '⠥',\r\n    'v': '⠧', 'w': '⠺', 'x': '⠭', 'y': '⠽', 'z': '⠵',\r\n    '1': '⠁', '2': '⠃', '3': '⠉', '4': '⠙', '5': '⠑', '6': '⠋', '7': '⠛',\r\n    '8': '⠓', '9': '⠊', '0': '⠚', ' ': ' ', '#': '⠼'\r\n}\r\n\r\n# Braille map including number sign\r\nbrailleMap = {\r\n    'a': [1], 'b': [1, 2], 'c': [1, 4], 'd': [1, 4, 5], 'e': [1, 5], 'f': [1, 2, 4],\r\n    'g': [1, 2, 4, 5], 'h': [1, 2, 5], 'i': [2, 4], 'j': [2, 4, 5], 'k': [1, 3],\r\n    'l': [1, 2, 3], 'm': [1, 3, 4], 'n': [1, 3, 4, 5], 'o': [1, 3, 5], 'p': [1, 2, 3, 4],\r\n    'q': [1, 2, 3, 4, 5], 'r': [1, 2, 3, 5], 's': [2, 3, 4], 't': [2, 3, 4, 5],\r\n    'u': [1, 3, 6], 'v': [1, 2, 3, 6], 'w': [2, 4, 5, 6], 'x': [1, 3, 4, 6],\r\n    'y': [1, 3, 4, 5, 6], 'z': [1, 3, 5, 6],\r\n    '1': [1], '2': [1, 2], '3': [1, 4], '4': [1, 4, 5], '5': [1, 5], '6': [1, 2, 4],\r\n    '7': [1, 2, 4, 5], '8': [1, 2, 5], '9': [2, 4], '0': [2, 4, 5],\r\n    '#': [3, 4, 5, 6]\r\n}\r\n\r\n############  FUNCTIONS  ############  \r\n\r\ndef wordLength(word , heightFactor , letterSpacing):\r\n    totalWordLength = 0\r\n    for letter in word:    \r\n        if letter.isdigit():\r\n            totalWordLength += 2 * heightFactor + letterSpacing\r\n        totalWordLength += 2 * heightFactor + letterSpacing\r\n    return totalWordLength\r\n\r\ndef getFamByName(doc,familyName ):\r\n    collector = FilteredElementCollector(doc).OfClass(Family)\r\n    for family in collector:\r\n        if family.Name == familyName:\r\n            return family\r\n    return None\r\n\r\ndef generateBrailleCellPoints(scaleFactor):\r\n    cellWidth = 2\r\n    cellHeight = 3\r\n    brailleCellPoints = []\r\n    dotOrder = [(0, 2), (0, 1), (0, 0), (1, 2), (1, 1), (1, 0)]\r\n\r\n    for i, (col, row) in enumerate(dotOrder):\r\n        x = col * scaleFactor\r\n        y = row * scaleFactor\r\n        point = XYZ(x, y, 0)\r\n        position = i + 1\r\n        brailleCellPoints.append((point.ToPoint(), position))\r\n\r\n    return brailleCellPoints\r\n\r\ndef getBraillePointsForLetter(letter, scaleFactor):\r\n    brailleCellPoints = generateBrailleCellPoints(scaleFactor)\r\n    dotConfiguration = brailleMap.get(letter.lower(), [])\r\n    braillePoints = [brailleCellPoints[dot - 1] for dot in dotConfiguration]\r\n    return braillePoints\r\n    \r\n\r\ndef createOffsetPoints(doc, letter, heightFactor, basePoint, fam,currentOffset):\r\n    allBraillePoints , newFams = [] , []\r\n    \r\n    letterPoints = getBraillePointsForLetter(letter, heightFactor)\r\n    offsetLetterPoints = []\r\n    for point, pos in letterPoints:\r\n        offsetPoint = XYZ(point.X + currentOffset + basePoint.X, point.Y + basePoint.Y, point.Z + basePoint.Z)\r\n        offsetLetterPoints.append(offsetPoint)\r\n    \r\n    for offsetPoint in offsetLetterPoints:\r\n        newFam = doc.FamilyCreate.NewFamilyInstance(offsetPoint, fam, StructuralType.NonStructural)\r\n        newFams.append(newFam)\r\n        allBraillePoints.append(offsetPoint.ToPoint())\r\n\r\n    return newFams   \r\n\r\ndef processFamily (doc , textToConvert,lvl):\r\n    brailleFams = []\r\n    brailleTempFamily = getFamByName(doc,\"Braille Template Family\" )\r\n    TransactionManager.Instance.ForceCloseTransaction()\r\n    familyDoc = doc.EditFamily(brailleTempFamily)\r\n\r\n    TransactionManager.Instance.EnsureInTransaction(familyDoc)\r\n\r\n## GET BRAILLE DOT FAMILY ##\r\n    brailleDotFam = getFamByName(familyDoc, \"Braille Dot\")\r\n    symIds = brailleDotFam.GetFamilySymbolIds()\r\n    for s in symIds:\r\n        dotSymbol = familyDoc.GetElement(s)\r\n        break\r\n    dotSymbol.Activate()   \r\n\r\n ## GET POINTS AND CREATE DOT FAMILIES ##   \r\n    currentOffset = 0\r\n    basePoint = XYZ(0,0,0)\r\n    for letter in textToConvert:\r\n        if letter.isdigit():\r\n            newFams = createOffsetPoints(familyDoc, \"#\", heightFactor, basePoint, dotSymbol,currentOffset)        \r\n            currentOffset += 2 * heightFactor+ letterSpacing\r\n            brailleFams.append(newFams)\r\n        newFams = createOffsetPoints(familyDoc, letter, heightFactor,basePoint, dotSymbol,currentOffset)  \r\n        currentOffset += 2 * heightFactor+ letterSpacing\r\n        brailleFams.append(newFams)\r\n   \r\n  \r\n ## GET FILE PATH AND FILE NAME ##\r\n    \r\n    fileName = textToConvert \r\n    familyFileName = f\"{fileName}.rfa\"\r\n    familyPath = os.path.join(directoryPath, familyFileName) \r\n    TransactionManager.Instance.ForceCloseTransaction()\r\n    #TransactionManager.Instance.TransactionTaskDone() \r\n    saveOptions = SaveAsOptions()\r\n    saveOptions.OverwriteExistingFile = True\r\n    familyDoc.SaveAs(familyPath, saveOptions)\r\n    #familyDoc.Close(True)    \r\n    \r\n    TransactionManager.Instance.EnsureInTransaction(doc)\r\n    familyLoaded = doc.LoadFamily(familyPath)\r\n\r\n    doc.Regenerate()\r\n    TransactionManager.Instance.TransactionTaskDone() \r\n\r\n ## PLACE FAMILY ##      \r\n\r\n    loadedFamily = getFamByName(doc,fileName)  \r\n    for familySymbolId in loadedFamily.GetFamilySymbolIds():\r\n        loadedFamilySymbol = doc.GetElement(familySymbolId)\r\n        break\r\n    TransactionManager.Instance.EnsureInTransaction(doc)\r\n    loadedFamilySymbol.Activate()\r\n    newInstance = doc.Create.NewFamilyInstance(basePoint, loadedFamilySymbol,lvl, StructuralType.NonStructural)\r\n    newInstance.GetParameters(\"Offset from Host\")[0].Set(lvl.Elevation)\r\n    TransactionManager.Instance.ForceCloseTransaction()\r\n    \r\n    #familyDoc.Close(False)    \r\n    \r\n    return brailleFams\r\n\r\n############  INPUTS  ############  \r\ndirectoryPath = IN[0] # Directory path to save the modified family\r\ntextToConvert = IN[1]\r\nlvl = UnwrapElement(IN[2])\r\n\r\n############  HARDCODED INPUTS  ############  \r\n#These could become inputs if desired\r\nheightFactor = 0.250\r\nletterSpacing = 0.125\r\n\r\n############  LOOP THROUGH PROJECT ROOMS  ############  \r\n\r\nconvertedText = processFamily (doc , textToConvert,lvl)\r\n\r\nOUT = convertedText\r\n",
+      "Engine": "CPython3",
+      "EngineName": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "d2ac018461084394be736d3d3beb42b7",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "86a7ccd666454c0db7efc8d1369857cd",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "50027193a26243388c6b040daed5bf68",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "41e576cf0be5454baa08103430821002",
+          "Name": "IN[2]",
+          "Description": "Input #2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f3ea6147887940e981cfe922c1bd0d82",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.StringInput, CoreNodeModels",
+      "Id": "7dfb303c8f6d45a180d1360356689591",
+      "NodeType": "StringInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "edd9545e02074372946bb3fce0531845",
+          "Name": "",
+          "Description": "String",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a string",
+      "InputValue": "Christopher Riddell"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.Levels, DSRevitNodesUI",
+      "SelectedIndex": 2,
+      "SelectedString": "L3",
+      "Id": "ef5afb7b2af2425eb8d2e211b6e27fc0",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "2d25461cc35d49b19505e6944ac3e914",
+          "Name": "Levels",
+          "Description": "The selected Levels",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Select a level in the active document"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "9bea6e14b02c40cb85d8db9cf5ccd90b",
+      "End": "86a7ccd666454c0db7efc8d1369857cd",
+      "Id": "ce90546b4faf415a97eb323e04f9abc5",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "f3ea6147887940e981cfe922c1bd0d82",
+      "End": "be3d237eaf6444ba8363c09bd9146c9e",
+      "Id": "4f09e2ff9abb4644b2c5de65f149ae4a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "edd9545e02074372946bb3fce0531845",
+      "End": "50027193a26243388c6b040daed5bf68",
+      "Id": "93ea8c370e064790a8926512bef768d3",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "2d25461cc35d49b19505e6944ac3e914",
+      "End": "41e576cf0be5454baa08103430821002",
+      "Id": "8d4017e4240e42199b8b456bb0dfcc41",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.19",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "6.1",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.19.3.6394",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "808a7af8e3ac4464ab0f7158082a1a76",
+        "Name": "Family Directory Path",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 502.0,
+        "Y": 607.99510854338428
+      },
+      {
+        "Id": "ddeea021c47a4cbf9d6a0c03351d7fab",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": true,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 1285.050301105156,
+        "Y": 692.69730675407607
+      },
+      {
+        "Id": "d2ac018461084394be736d3d3beb42b7",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 950.47104258453135,
+        "Y": 697.03573568822833
+      },
+      {
+        "Id": "7dfb303c8f6d45a180d1360356689591",
+        "Name": "Text to Convert",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 632.53610548787208,
+        "Y": 754.66993737824214
+      },
+      {
+        "Id": "ef5afb7b2af2425eb8d2e211b6e27fc0",
+        "Name": "Level",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 603.85120407419925,
+        "Y": 883.75199373977057
+      }
+    ],
+    "Annotations": [
+      {
+        "Id": "8d6b61784c9844089b321f22841faf01",
+        "Title": "Output",
+        "DescriptionText": "",
+        "IsExpanded": true,
+        "WidthAdjustment": 0.0,
+        "HeightAdjustment": 0.0,
+        "Nodes": [
+          "ddeea021c47a4cbf9d6a0c03351d7fab"
+        ],
+        "HasNestedGroups": false,
+        "Left": 1275.050301105156,
+        "Top": 619.69730675407607,
+        "Width": 297.0,
+        "Height": 371.0,
+        "FontSize": 36.0,
+        "GroupStyleId": "07655dc1-2d65-4fed-8d6a-37235d3e3a8d",
+        "InitialTop": 692.69730675407607,
+        "InitialHeight": 145.0,
+        "TextblockHeight": 63.0,
+        "Background": "#FFFFC999"
+      },
+      {
+        "Id": "0a3abc5ed97c4dda940b6bc06c79ea7f",
+        "Title": "Create Braille Families",
+        "DescriptionText": "",
+        "IsExpanded": true,
+        "WidthAdjustment": 0.0,
+        "HeightAdjustment": 0.0,
+        "Nodes": [
+          "d2ac018461084394be736d3d3beb42b7"
+        ],
+        "HasNestedGroups": false,
+        "Left": 940.47104258453135,
+        "Top": 537.03573568822833,
+        "Width": 194.00000000000011,
+        "Height": 357.0,
+        "FontSize": 36.0,
+        "GroupStyleId": "4d68be4a-a04d-4945-9dd5-cdf61079d790",
+        "InitialTop": 697.03573568822833,
+        "InitialHeight": 145.0,
+        "TextblockHeight": 150.0,
+        "Background": "#FFB9F9E1"
+      },
+      {
+        "Id": "c2c5c5920ccc4a329dfa3442709d7424",
+        "Title": "Inputs",
+        "DescriptionText": "",
+        "IsExpanded": true,
+        "WidthAdjustment": 0.0,
+        "HeightAdjustment": 0.0,
+        "Nodes": [
+          "808a7af8e3ac4464ab0f7158082a1a76",
+          "7dfb303c8f6d45a180d1360356689591",
+          "ef5afb7b2af2425eb8d2e211b6e27fc0"
+        ],
+        "HasNestedGroups": false,
+        "Left": 492.0,
+        "Top": 534.99510854338428,
+        "Width": 359.53610548787208,
+        "Height": 480.75688519638629,
+        "FontSize": 36.0,
+        "GroupStyleId": "883066aa-1fe2-44a4-9bd1-c3df86bfe9f6",
+        "InitialTop": 607.99510854338428,
+        "InitialHeight": 420.75688519638629,
+        "TextblockHeight": 63.0,
+        "Background": "#FF48B9FF"
+      }
+    ],
+    "X": -251.96584093595339,
+    "Y": -77.347665498368087,
+    "Zoom": 0.59475911799129921
+  }
+}
